@@ -1,32 +1,84 @@
-# LaundryApp — Sistem Manajemen Laundry (JavaFX + Maven)
+# 🧺 LaundryApp — Sistem Kasir & Manajemen Laundry
 
-Aplikasi manajemen laundry sederhana berbasis JavaFX dengan database MySQL.
+Aplikasi desktop berbasis **JavaFX + Maven** yang digunakan untuk membantu proses pengelolaan usaha laundry secara lebih cepat, rapi, dan terstruktur. Sistem ini mendukung pengelolaan pelanggan, layanan laundry, transaksi, hingga pembayaran dengan integrasi database MySQL.
 
 ---
 
-## 📁 Struktur Proyek
+# ✨ Fitur Utama
 
-```
+## 📊 Dashboard
+
+* Menampilkan ringkasan data laundry
+* Statistik transaksi
+* Daftar transaksi terbaru
+* Tampilan modern dan sederhana
+
+## 👥 Manajemen Pelanggan
+
+* Tambah data pelanggan
+* Edit data pelanggan
+* Hapus pelanggan
+* Pencarian data pelanggan
+
+## 🧼 Manajemen Layanan
+
+* Menambah jenis layanan laundry
+* Mengatur harga layanan
+* Edit dan hapus layanan
+
+## 🧾 Manajemen Transaksi
+
+* Membuat transaksi laundry
+* Mengubah status cucian
+* Menghapus transaksi
+* Perhitungan total otomatis
+
+## 💳 Pembayaran
+
+* Mendukung pembayaran:
+
+  * Tunai
+  * Transfer
+  * QRIS
+* Mencatat riwayat pembayaran
+
+---
+
+# 🛠️ Teknologi yang Digunakan
+
+| Teknologi | Keterangan                      |
+| --------- | ------------------------------- |
+| Java 17   | Bahasa pemrograman utama        |
+| JavaFX    | Framework antarmuka desktop     |
+| Maven     | Dependency & project management |
+| MySQL     | Database penyimpanan data       |
+| JDBC      | Koneksi Java ke MySQL           |
+
+---
+
+# 📁 Struktur Proyek
+
+```text
 laundry-app/
 ├── pom.xml
 └── src/main/java/com/laundry/
-    ├── Main.java              ← Titik masuk aplikasi
+    ├── Main.java
     ├── db/
-    │   └── DBConnection.java  ← Koneksi ke MySQL
-    ├── model/                 ← Kelas data (POJO)
+    │   └── DBConnection.java
+    ├── model/
     │   ├── User.java
     │   ├── Pelanggan.java
     │   ├── Layanan.java
     │   ├── Transaksi.java
     │   └── Pembayaran.java
-    ├── dao/                   ← Operasi database (CRUD)
+    ├── dao/
     │   ├── UserDAO.java
     │   ├── PelangganDAO.java
     │   ├── LayananDAO.java
     │   ├── TransaksiDAO.java
     │   └── PembayaranDAO.java
-    └── ui/                    ← Tampilan JavaFX
-        ├── StyleHelper.java   ← Warna & style terpusat
+    └── ui/
+        ├── StyleHelper.java
         ├── LoginScene.java
         ├── MainScene.java
         ├── DashboardPane.java
@@ -38,68 +90,148 @@ laundry-app/
 
 ---
 
-## ⚙️ Persyaratan
+# 🧱 Arsitektur Aplikasi
 
-- Java 17 atau lebih baru
-- Maven 3.6+
-- MySQL Server (XAMPP / WAMP / native)
+```text
+UI (JavaFX)  →  DAO  →  DBConnection  →  MySQL
+   Pane           CRUD      Singleton       Database
+```
+
+## Penjelasan
+
+* **UI (JavaFX)** → Menangani tampilan dan interaksi pengguna
+* **DAO** → Menjalankan operasi CRUD dan query SQL
+* **DBConnection** → Mengatur koneksi database menggunakan pola Singleton
+* **Model** → Representasi data/tabel database menggunakan POJO
 
 ---
 
-## 🛠️ Langkah Setup
+# ⚙️ Persyaratan Sistem
 
-### 1. Import Database
-Buka phpMyAdmin atau MySQL CLI, lalu jalankan:
+Sebelum menjalankan aplikasi, pastikan sudah menginstal:
+
+* Java JDK 17 atau lebih baru
+* Maven 3.6+
+* MySQL Server / XAMPP / WAMP
+* IDE seperti IntelliJ IDEA atau VS Code
+
+---
+
+# 🚀 Cara Menjalankan Aplikasi
+
+## 1️⃣ Clone Repository
+
+```bash
+git clone https://github.com/username/laundry-app.git
+cd laundry-app
+```
+
+---
+
+## 2️⃣ Import Database
+
+Buka phpMyAdmin atau MySQL CLI lalu jalankan file SQL:
+
 ```sql
 source sistem_laundry_sederhana.sql
 ```
-Ini akan membuat database `laundry_sederhana` beserta tabel dan data contoh.
 
-### 2. Sesuaikan Koneksi Database
-Edit file `src/main/java/com/laundry/db/DBConnection.java`:
-```java
-private static final String URL  = "jdbc:mysql://localhost:3306/laundry_sederhana";
-private static final String USER = "root";   // ganti sesuai username MySQL kamu
-private static final String PASS = "";       // ganti sesuai password MySQL kamu
+Database `laundry_sederhana` beserta tabel akan otomatis dibuat.
+
+---
+
+## 3️⃣ Konfigurasi Database
+
+Buka file:
+
+```text
+src/main/java/com/laundry/db/DBConnection.java
 ```
 
-### 3. Jalankan Aplikasi
+Lalu sesuaikan konfigurasi berikut:
+
+```java
+private static final String URL  = "jdbc:mysql://localhost:3306/laundry_sederhana";
+private static final String USER = "root";
+private static final String PASS = "";
+```
+
+---
+
+## 4️⃣ Jalankan Aplikasi
+
+Gunakan perintah berikut:
+
 ```bash
-cd laundry-app
 mvn javafx:run
 ```
 
 ---
 
-## 🔑 Akun Login (Data Contoh)
+# 🔐 Akun Login Default
 
-| Username | Password  | Role    |
-|----------|-----------|---------|
-| admin    | admin123  | admin   |
-| sari     | sari123   | petugas |
-| riko     | riko123   | petugas |
-
----
-
-## 📋 Fitur Aplikasi
-
-| Menu        | Fitur                                          |
-|-------------|------------------------------------------------|
-| Dashboard   | Statistik ringkas + 5 transaksi terbaru        |
-| Pelanggan   | Tambah, edit, hapus data pelanggan             |
-| Layanan     | Kelola jenis layanan dan harga                 |
-| Transaksi   | Buat transaksi, update status, hapus           |
-| Pembayaran  | Catat pembayaran (tunai/transfer/QRIS)         |
+| Username | Password | Role    |
+| -------- | -------- | ------- |
+| admin    | admin123 | Admin   |
+| sari     | sari123  | Petugas |
+| riko     | riko123  | Petugas |
 
 ---
 
-## 🏗️ Arsitektur Aplikasi
+# 📌 Konsep OOP yang Digunakan
 
-```
-UI (JavaFX)  →  DAO  →  DBConnection  →  MySQL
-   Pane           CRUD     Singleton        DB
+Aplikasi ini menerapkan konsep Object Oriented Programming (OOP):
+
+* **Encapsulation** → Data pada model menggunakan private field dan getter/setter
+* **Inheritance** → Struktur class dapat dikembangkan dengan pewarisan
+* **Abstraction** → DAO memisahkan logika database dari UI
+* **Modularity** → Setiap fitur dipisahkan dalam package berbeda
+
+---
+
+# 🎨 Tampilan Aplikasi
+
+Antarmuka dibuat menggunakan JavaFX dengan desain:
+
+* Modern
+* Bersih
+* Mudah digunakan
+* Responsif untuk desktop
+
+Komponen style dipusatkan pada:
+
+```text
+StyleHelper.java
 ```
 
-- **Model**: Kelas POJO yang merepresentasikan tabel database
-- **DAO**: Berisi semua query SQL (dipisah dari UI)
-- **UI**: Hanya menangani tampilan dan interaksi pengguna
+agar warna dan tema aplikasi lebih konsisten.
+
+---
+
+# 📈 Pengembangan Selanjutnya
+
+Fitur yang dapat ditambahkan:
+
+* Cetak struk transaksi
+* Export laporan PDF
+* Grafik pendapatan
+* Sistem member pelanggan
+* Notifikasi status laundry
+* Multi-user authentication
+
+---
+
+# 👨‍💻 Developer
+
+Dikembangkan sebagai proyek pembelajaran Java Desktop menggunakan:
+
+* JavaFX
+* Maven
+* MySQL
+* JDBC
+
+---
+
+# 📄 Lisensi
+
+Project ini dibuat untuk keperluan pembelajaran dan pengembangan sistem desktop Java.
