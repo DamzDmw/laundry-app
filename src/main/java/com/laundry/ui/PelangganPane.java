@@ -5,206 +5,114 @@ import com.laundry.model.Pelanggan;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 
-import java.util.Optional;
-
-/**
- * Halaman manajemen Pelanggan.
- * Fitur: Tampil, Tambah, Edit, Hapus pelanggan.
- */
 public class PelangganPane {
 
-    public static Pane create() {
-        PelangganDAO dao = new PelangganDAO();
+    private static PelangganDAO dao = new PelangganDAO();
+    private static ObservableList<Pelanggan> data;
+    private static TableView<Pelanggan> tabel;
 
-        VBox root = new VBox(20);
+    public static Pane create() {
+        data = FXCollections.observableArrayList(dao.getAll());
+
+        VBox root = new VBox(16);
         root.setPadding(new Insets(10));
 
-        // ── Judul ────────────────────────────────────────────────
         Label judul = new Label("Manajemen Pelanggan");
-        judul.setStyle(StyleHelper.judulHalaman());
+        judul.setStyle("-fx-font-size:22px;-fx-font-weight:bold;");
 
-        // ── Form Input ───────────────────────────────────────────
-        VBox formCard = new VBox(12);
-        formCard.setStyle(StyleHelper.card());
+        TextField tfNama   = field("Nama Lengkap");
+        TextField tfNoHp   = field("No. HP (10-13 digit)");
+        TextField tfAlamat = field("Alamat");
 
-        Label judulForm = new Label("Form Pelanggan");
-        judulForm.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        tabel = buatTabel();
 
-        TextField tfNama = buatField("Nama lengkap");
-        TextField tfNoHp = buatField("Nomor HP");
-        TextField tfAlamat = buatField("Alamat");
-
-        // Grid 2 kolom untuk form
-        GridPane grid = new GridPane();
-        grid.setHgap(16);
-        grid.setVgap(10);
-        grid.add(label("Nama"), 0, 0);
-        grid.add(tfNama, 1, 0);
-        grid.add(label("No. HP"), 0, 1);
-        grid.add(tfNoHp, 1, 1);
-        grid.add(label("Alamat"), 0, 2);
-        grid.add(tfAlamat, 1, 2);
-        GridPane.setHgrow(tfNama, Priority.ALWAYS);
-        GridPane.setHgrow(tfNoHp, Priority.ALWAYS);
-        GridPane.setHgrow(tfAlamat, Priority.ALWAYS);
-
-        // Tabel data pelanggan
-        ObservableList<Pelanggan> data = FXCollections.observableArrayList(dao.getAll());
-        TableView<Pelanggan> tabel = buatTabel(data);
-
-        // Tombol aksi
-        Button btnTambah = new Button("➕ Tambah");
-        btnTambah.setStyle(StyleHelper.btnHijau());
-        Button btnEdit = new Button("✏ Edit");
-        btnEdit.setStyle(StyleHelper.btnKuning());
-        Button btnHapus = new Button("🗑 Hapus");
-        btnHapus.setStyle(StyleHelper.btnMerah());
-        Button btnBatal = new Button("✖ Batal");
-        btnBatal.setStyle(StyleHelper.btnBiru());
-
-        HBox tombolRow = new HBox(10, btnTambah, btnEdit, btnHapus, btnBatal);
-        tombolRow.setAlignment(Pos.CENTER_LEFT);
-
-        // ── Aksi Tambah ──────────────────────────────────────────
-        btnTambah.setOnAction(e -> {
-            if (tfNama.getText().isBlank() || tfNoHp.getText().isBlank()) {
-                peringatan("Nama dan No. HP wajib diisi!");
-                return;
-            }
-            // Tambahan: validasi format nomor HP (10-13 digit angka)
-            if (!tfNoHp.getText().trim().matches("\\d{10,13}")) {
-                peringatan("Format nomor HP tidak valid (10-13 digit angka)!");
-                return;
-            }
-            Pelanggan p = new Pelanggan(0, tfNama.getText().trim(),
-                    tfNoHp.getText().trim(),
-                    tfAlamat.getText().trim());
-            if (dao.insert(p)) {
-                data.setAll(dao.getAll());
-                kosongkanForm(tfNama, tfNoHp, tfAlamat);
-            } else
-                peringatan("Gagal menambah pelanggan!");
-        });
-
-        // ── Aksi Edit ────────────────────────────────────────────
-        btnEdit.setOnAction(e -> {
-            Pelanggan pilihan = tabel.getSelectionModel().getSelectedItem();
-            if (pilihan == null) {
-                peringatan("Pilih pelanggan yang ingin diedit!");
-                return;
-            }
-            if (tfNama.getText().isBlank()) {
-                peringatan("Nama wajib diisi!");
-                return;
-            }
-
-            // Tambahan: konfirmasi sebelum edit
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                    "Edit data: " + pilihan.getNama() + "?", ButtonType.YES, ButtonType.NO);
-            confirm.setTitle("Konfirmasi Edit");
-            confirm.setHeaderText("Perubahan akan tersimpan langsung ke basis data.");
-            confirm.showAndWait().ifPresent(btn -> {
-                if (btn == ButtonType.YES) {
-                    pilihan.setNama(tfNama.getText().trim());
-                    pilihan.setNoHp(tfNoHp.getText().trim());
-                    pilihan.setAlamat(tfAlamat.getText().trim());
-                    if (dao.update(pilihan)) {
-                        data.setAll(dao.getAll());
-                        kosongkanForm(tfNama, tfNoHp, tfAlamat);
-                    } else
-                        peringatan("Gagal mengedit pelanggan!");
-                }
-            });
-        });
-
-        // ── Aksi Hapus ───────────────────────────────────────────
-        btnHapus.setOnAction(e -> {
-            Pelanggan pilihan = tabel.getSelectionModel().getSelectedItem();
-            if (pilihan == null) {
-                peringatan("Pilih pelanggan yang ingin dihapus!");
-                return;
-            }
-            if (konfirmasi("Hapus pelanggan " + pilihan.getNama() + "?")) {
-                if (dao.delete(pilihan.getIdPelanggan()))
-                    data.setAll(dao.getAll());
-                else
-                    peringatan("Gagal menghapus! Mungkin masih ada transaksi terkait.");
+        tabel.getSelectionModel().selectedItemProperty().addListener((o, lama, p) -> {
+            if (p != null) {
+                tfNama.setText(p.getNama());
+                tfNoHp.setText(p.getNoHp());
+                tfAlamat.setText(p.getAlamat() != null ? p.getAlamat() : "");
             }
         });
 
-        // ── Klik baris tabel → isi form ──────────────────────────
-        tabel.getSelectionModel().selectedItemProperty().addListener((obs, lama, baru) -> {
-            if (baru != null) {
-                tfNama.setText(baru.getNama());
-                tfNoHp.setText(baru.getNoHp());
-                tfAlamat.setText(baru.getAlamat() != null ? baru.getAlamat() : "");
-            }
-        });
+        Button btnSimpan = tombol("💾 Simpan", "#27ae60");
+        Button btnHapus  = tombol("🗑 Hapus",  "#e74c3c");
+        Button btnBatal  = tombol("✖ Batal",   "#1e6091");
 
-        btnBatal.setOnAction(e -> {
-            tabel.getSelectionModel().clearSelection();
-            kosongkanForm(tfNama, tfNoHp, tfAlamat);
-        });
+        btnSimpan.setOnAction(e -> aksiSimpan(tfNama, tfNoHp, tfAlamat));
+        btnHapus.setOnAction(e  -> aksiHapus());
+        btnBatal.setOnAction(e  -> bersih(tfNama, tfNoHp, tfAlamat));
 
-        formCard.getChildren().addAll(judulForm, grid, tombolRow);
-        root.getChildren().addAll(judul, formCard, tabel);
+        HBox form = new HBox(10, tfNama, tfNoHp, tfAlamat, btnSimpan, btnHapus, btnBatal);
+        form.setStyle("-fx-background-color:white;-fx-padding:16;-fx-background-radius:8;");
+
+        root.getChildren().addAll(judul, form, tabel);
         return root;
     }
 
-    // ── Helper Tabel ─────────────────────────────────────────────
-    private static TableView<Pelanggan> buatTabel(ObservableList<Pelanggan> data) {
-        TableView<Pelanggan> tabel = new TableView<>(data);
-        tabel.setStyle(StyleHelper.card());
-        tabel.setPrefHeight(320);
-        tabel.getColumns().addAll(
-                kolom("ID", "idPelanggan", 60),
-                kolom("Nama", "nama", 200),
-                kolom("No. HP", "noHp", 140),
-                kolom("Alamat", "alamat", 300));
-        return tabel;
+    private static void aksiSimpan(TextField tfNama, TextField tfNoHp, TextField tfAlamat) {
+        if (tfNama.getText().isBlank() || tfNoHp.getText().isBlank()) {
+            alert("Nama dan No. HP wajib diisi!"); return;
+        }
+        if (!tfNoHp.getText().trim().matches("\\d{10,13}")) {
+            alert("Format No. HP tidak valid (10-13 digit angka)!"); return;
+        }
+        Pelanggan pilihan = tabel.getSelectionModel().getSelectedItem();
+        if (pilihan != null) {
+            Alert c = new Alert(Alert.AlertType.CONFIRMATION, "Edit data " + pilihan.getNama() + "?", ButtonType.YES, ButtonType.NO);
+            c.showAndWait().ifPresent(b -> {
+                if (b == ButtonType.YES) {
+                    pilihan.setNama(tfNama.getText().trim());
+                    pilihan.setNoHp(tfNoHp.getText().trim());
+                    pilihan.setAlamat(tfAlamat.getText().trim());
+                    if (dao.update(pilihan)) refresh(); else alert("Gagal mengedit!");
+                }
+            });
+        } else {
+            Pelanggan p = new Pelanggan(0, tfNama.getText().trim(), tfNoHp.getText().trim(), tfAlamat.getText().trim());
+            if (dao.insert(p)) refresh(); else alert("Gagal menambah!");
+        }
+        bersih(tfNama, tfNoHp, tfAlamat);
     }
+
+    private static void aksiHapus() {
+        Pelanggan p = tabel.getSelectionModel().getSelectedItem();
+        if (p == null) { alert("Pilih pelanggan terlebih dahulu!"); return; }
+        Alert c = new Alert(Alert.AlertType.CONFIRMATION, "Hapus pelanggan " + p.getNama() + "?", ButtonType.YES, ButtonType.NO);
+        c.setHeaderText("Tindakan ini tidak dapat dibatalkan!");
+        c.showAndWait().ifPresent(b -> {
+            if (b == ButtonType.YES) {
+                if (dao.delete(p.getIdPelanggan())) refresh(); else alert("Gagal menghapus!");
+            }
+        });
+    }
+
+    private static TableView<Pelanggan> buatTabel() {
+        TableView<Pelanggan> t = new TableView<>(data);
+        t.setPrefHeight(400);
+        t.getColumns().addAll(
+            kolom("ID",      "idPelanggan", 60),
+            kolom("Nama",    "nama",        200),
+            kolom("No. HP",  "noHp",        140),
+            kolom("Alamat",  "alamat",      300)
+        );
+        return t;
+    }
+
+    private static void refresh() { data.setAll(dao.getAll()); tabel.getSelectionModel().clearSelection(); }
+    private static void bersih(TextField... fs) { tabel.getSelectionModel().clearSelection(); for (TextField f : fs) f.clear(); }
+    private static void alert(String msg) { new Alert(Alert.AlertType.WARNING, msg, ButtonType.OK).showAndWait(); }
+    private static TextField field(String ph) { TextField tf = new TextField(); tf.setPromptText(ph); tf.setStyle("-fx-border-color:#dce1e7;-fx-border-radius:6;-fx-background-radius:6;-fx-padding:8;"); return tf; }
+    private static Button tombol(String t, String w) { Button b = new Button(t); b.setStyle("-fx-background-color:"+w+";-fx-text-fill:white;-fx-font-weight:bold;-fx-padding:7 14;-fx-background-radius:6;"); return b; }
 
     @SuppressWarnings("unchecked")
-    private static <T> TableColumn<T, ?> kolom(String nama, String properti, double lebar) {
-        TableColumn<T, Object> col = new TableColumn<>(nama);
-        col.setCellValueFactory(new PropertyValueFactory<>(properti));
-        col.setPrefWidth(lebar);
-        return col;
-    }
-
-    // ── Helper Komponen ──────────────────────────────────────────
-    private static TextField buatField(String placeholder) {
-        TextField tf = new TextField();
-        tf.setPromptText(placeholder);
-        tf.setStyle(StyleHelper.field());
-        return tf;
-    }
-
-    private static Label label(String teks) {
-        Label l = new Label(teks);
-        l.setStyle("-fx-font-weight:bold;-fx-font-size:13px;");
-        return l;
-    }
-
-    private static void kosongkanForm(TextField... fields) {
-        for (TextField tf : fields)
-            tf.clear();
-    }
-
-    private static void peringatan(String pesan) {
-        new Alert(Alert.AlertType.WARNING, pesan, ButtonType.OK).showAndWait();
-    }
-
-    private static boolean konfirmasi(String pesan) {
-        Optional<ButtonType> hasil = new Alert(Alert.AlertType.CONFIRMATION, pesan,
-                ButtonType.YES, ButtonType.NO).showAndWait();
-        return hasil.isPresent() && hasil.get() == ButtonType.YES;
+    private static <T> TableColumn<T, ?> kolom(String nama, String prop, double lebar) {
+        TableColumn<T, Object> c = new TableColumn<>(nama);
+        c.setCellValueFactory(new PropertyValueFactory<>(prop));
+        c.setPrefWidth(lebar);
+        return c;
     }
 }
