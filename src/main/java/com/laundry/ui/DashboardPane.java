@@ -31,12 +31,14 @@ public class DashboardPane {
         // ── Kartu Statistik ──────────────────────────────────────
         HBox kartuRow = new HBox(16);
         kartuRow.getChildren().addAll(
-            buatKartu("👥", "Total Pelanggan",  hitungDari("SELECT COUNT(*) FROM pelanggan"),                               "#2980b9"),
-            buatKartu("🧾", "Total Transaksi",   hitungDari("SELECT COUNT(*) FROM transaksi"),                              "#8e44ad"),
-            buatKartu("⏳", "Sedang Diproses",   hitungDari("SELECT COUNT(*) FROM transaksi WHERE status='diproses'"),      StyleHelper.KUNING),
-            buatKartu("✅", "Sudah Selesai",     hitungDari("SELECT COUNT(*) FROM transaksi WHERE status='selesai'"),       StyleHelper.HIJAU)
-        );
-        for (var node : kartuRow.getChildren()) HBox.setHgrow(node, Priority.ALWAYS);
+                buatKartu("👥", "Total Pelanggan", hitungDari("SELECT COUNT(*) FROM pelanggan"), "#2980b9"),
+                buatKartu("🧾", "Total Transaksi", hitungDari("SELECT COUNT(*) FROM transaksi"), "#8e44ad"),
+                buatKartu("⏳", "Sedang Diproses", hitungDari("SELECT COUNT(*) FROM transaksi WHERE status='diproses'"),
+                        StyleHelper.KUNING),
+                buatKartu("✅", "Sudah Selesai", hitungDari("SELECT COUNT(*) FROM transaksi WHERE status='selesai'"),
+                        StyleHelper.HIJAU));
+        for (var node : kartuRow.getChildren())
+            HBox.setHgrow(node, Priority.ALWAYS);
 
         // ── Tabel Transaksi Terbaru ───────────────────────────────
         Label lblRecent = new Label("Transaksi Terbaru");
@@ -47,11 +49,10 @@ public class DashboardPane {
         daftarTransaksi.setStyle(StyleHelper.card());
 
         try {
-            String sql =
-                "SELECT t.kode_transaksi, p.nama, t.status, t.tgl_masuk " +
-                "FROM transaksi t " +
-                "LEFT JOIN pelanggan p ON t.id_pelanggan = p.id_pelanggan " +
-                "ORDER BY t.created_at DESC LIMIT 5";
+            String sql = "SELECT t.kode_transaksi, p.nama, t.status, t.tgl_masuk " +
+                    "FROM transaksi t " +
+                    "LEFT JOIN pelanggan p ON t.id_pelanggan = p.id_pelanggan " +
+                    "ORDER BY t.created_at DESC LIMIT 5";
             ResultSet rs = DBConnection.getConnection().createStatement().executeQuery(sql);
 
             while (rs.next()) {
@@ -60,12 +61,12 @@ public class DashboardPane {
                 baris.setPadding(new Insets(8, 12, 8, 12));
                 baris.setStyle("-fx-background-color:#f8fafc;-fx-background-radius:6;");
 
-                Label kode   = kolom(rs.getString("kode_transaksi"), 160, true);
-                Label nama   = kolom(rs.getString("nama") != null ? rs.getString("nama") : "-", 180, false);
-                Label tgl    = kolom(rs.getString("tgl_masuk"), 110, false);
+                Label kode = kolom(rs.getString("kode_transaksi"), 160, true);
+                Label nama = kolom(rs.getString("nama") != null ? rs.getString("nama") : "-", 180, false);
+                Label tgl = kolom(rs.getString("tgl_masuk"), 110, false);
                 tgl.setStyle("-fx-font-size:12px;-fx-text-fill:#7f8c8d;-fx-min-width:110;");
 
-                Label badge  = buatBadge(rs.getString("status"));
+                Label badge = buatBadge(rs.getString("status"));
                 Region spasi = new Region();
                 HBox.setHgrow(spasi, Priority.ALWAYS);
 
@@ -90,10 +91,12 @@ public class DashboardPane {
         kartu.setAlignment(Pos.CENTER_LEFT);
         kartu.setPadding(new Insets(20));
         kartu.setStyle("-fx-background-color:" + warna + ";-fx-background-radius:12;" +
-                       "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.15),10,0,0,3);");
+                "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.15),10,0,0,3);");
 
-        Label ico = new Label(ikon);   ico.setFont(Font.font(26));
-        Label lbl = new Label(label);  lbl.setStyle("-fx-text-fill:rgba(255,255,255,0.85);-fx-font-size:12px;");
+        Label ico = new Label(ikon);
+        ico.setFont(Font.font(26));
+        Label lbl = new Label(label);
+        lbl.setStyle("-fx-text-fill:rgba(255,255,255,0.85);-fx-font-size:12px;");
         Label val = new Label(nilai);
         val.setFont(Font.font("Arial", FontWeight.BOLD, 26));
         val.setTextFill(Color.WHITE);
@@ -105,8 +108,10 @@ public class DashboardPane {
     private static String hitungDari(String sql) {
         try {
             ResultSet rs = DBConnection.getConnection().createStatement().executeQuery(sql);
-            if (rs.next()) return String.valueOf(rs.getInt(1));
-        } catch (Exception e) { /* abaikan */ }
+            if (rs.next())
+                return String.valueOf(rs.getInt(1));
+        } catch (Exception e) {
+            /* abaikan */ }
         return "0";
     }
 
@@ -122,12 +127,12 @@ public class DashboardPane {
         String warna = switch (status != null ? status : "") {
             case "diterima" -> "#3498db";
             case "diproses" -> StyleHelper.KUNING;
-            case "selesai"  -> StyleHelper.HIJAU;
-            case "diambil"  -> "#8e44ad";
-            default         -> "#95a5a6";
+            case "selesai" -> StyleHelper.HIJAU;
+            case "diambil" -> "#8e44ad";
+            default -> "#95a5a6";
         };
         lbl.setStyle("-fx-background-color:" + warna + ";-fx-text-fill:white;" +
-                     "-fx-padding:3 10;-fx-background-radius:20;-fx-font-size:11px;-fx-font-weight:bold;");
+                "-fx-padding:3 10;-fx-background-radius:20;-fx-font-size:11px;-fx-font-weight:bold;");
         return lbl;
     }
 }

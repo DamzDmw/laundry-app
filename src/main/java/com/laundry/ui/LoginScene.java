@@ -27,10 +27,10 @@ public class LoginScene {
         panelKiri.setPadding(new Insets(60));
         panelKiri.setStyle("-fx-background-color:" + StyleHelper.BIRU_TUA + ";");
 
-        Label ikon   = new Label("🧺");
+        Label ikon = new Label("🧺");
         ikon.setFont(Font.font(72));
 
-        Label nama   = new Label("LaundryApp");
+        Label nama = new Label("LaundryApp");
         nama.setFont(Font.font("Arial", FontWeight.BOLD, 28));
         nama.setTextFill(Color.WHITE);
 
@@ -47,7 +47,7 @@ public class LoginScene {
         panelKanan.setPadding(new Insets(60, 70, 60, 70));
         panelKanan.setStyle("-fx-background-color:#f0f4f8;");
 
-        Label judul   = new Label("Selamat Datang");
+        Label judul = new Label("Selamat Datang");
         judul.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         judul.setTextFill(Color.web(StyleHelper.TEXT_DARK));
 
@@ -89,8 +89,19 @@ public class LoginScene {
                 return;
             }
 
+            // Tambahan: validasi panjang minimum username
+            if (usr.length() < 3) {
+                lblError.setText("⚠ Username minimal 3 karakter!");
+                return;
+            }
+
             User user = new UserDAO().login(usr, pwd);
             if (user != null) {
+                // Tambahan: dialog sambutan setelah login berhasil
+                Alert info = new Alert(Alert.AlertType.INFORMATION,
+                        "Selamat datang, " + user.getNama() + "!");
+                info.setTitle("Login Berhasil");
+                info.showAndWait();
                 stage.setScene(MainScene.create(stage, user));
                 stage.setTitle("LaundryApp - " + user.getNama());
             } else {
@@ -98,6 +109,16 @@ public class LoginScene {
                 tfPass.clear();
             }
         };
+
+        // Tambahan: sembunyikan pesan error saat pengguna mulai mengetik
+        tfUser.textProperty().addListener((o, old, newV) -> {
+            if (!lblError.getText().isEmpty())
+                lblError.setText("");
+        });
+        tfPass.textProperty().addListener((o, old, newV) -> {
+            if (!lblError.getText().isEmpty())
+                lblError.setText("");
+        });
 
         btnLogin.setOnAction(e -> aksiLogin.run());
         tfPass.setOnAction(e -> aksiLogin.run()); // enter di password langsung login

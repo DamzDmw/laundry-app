@@ -1,6 +1,7 @@
 package com.laundry;
 
 import com.laundry.ui.LoginScene;
+
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -9,7 +10,7 @@ import javafx.stage.Stage;
  * Menjalankan JavaFX dan menampilkan halaman Login pertama kali.
  *
  * Cara menjalankan:
- *   mvn javafx:run
+ * mvn javafx:run
  */
 public class Main extends Application {
 

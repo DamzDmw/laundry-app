@@ -32,7 +32,7 @@ public class MainScene {
         VBox logoBox = new VBox(4);
         logoBox.setAlignment(Pos.CENTER);
         logoBox.setPadding(new Insets(24, 0, 20, 0));
-        Label logo    = new Label("🧺");
+        Label logo = new Label("🧺");
         logo.setFont(Font.font(36));
         Label appName = new Label("LaundryApp");
         appName.setFont(Font.font("Arial", FontWeight.BOLD, 16));
@@ -61,11 +61,11 @@ public class MainScene {
 
         // ── Tombol Navigasi ───────────────────────────────────────
         Button[] navMenu = {
-            buatTombolNav("🏠  Dashboard"),
-            buatTombolNav("👥  Pelanggan"),
-            buatTombolNav("🧴  Layanan"),
-            buatTombolNav("🧾  Transaksi"),
-            buatTombolNav("💰  Pembayaran"),
+                buatTombolNav("🏠  Dashboard"),
+                buatTombolNav("👥  Pelanggan"),
+                buatTombolNav("🧴  Layanan"),
+                buatTombolNav("🧾  Transaksi"),
+                buatTombolNav("💰  Pembayaran"),
         };
 
         // Tampilkan Dashboard saat pertama buka
@@ -73,11 +73,26 @@ public class MainScene {
         setAktif(navMenu[0]);
 
         // Aksi setiap tombol menu
-        navMenu[0].setOnAction(e -> { konten.getChildren().setAll(DashboardPane.create(user));  setAktif(navMenu[0]); });
-        navMenu[1].setOnAction(e -> { konten.getChildren().setAll(PelangganPane.create());      setAktif(navMenu[1]); });
-        navMenu[2].setOnAction(e -> { konten.getChildren().setAll(LayananPane.create());        setAktif(navMenu[2]); });
-        navMenu[3].setOnAction(e -> { konten.getChildren().setAll(TransaksiPane.create(user)); setAktif(navMenu[3]); });
-        navMenu[4].setOnAction(e -> { konten.getChildren().setAll(PembayaranPane.create());     setAktif(navMenu[4]); });
+        navMenu[0].setOnAction(e -> {
+            konten.getChildren().setAll(DashboardPane.create(user));
+            setAktif(navMenu[0]);
+        });
+        navMenu[1].setOnAction(e -> {
+            konten.getChildren().setAll(PelangganPane.create());
+            setAktif(navMenu[1]);
+        });
+        navMenu[2].setOnAction(e -> {
+            konten.getChildren().setAll(LayananPane.create());
+            setAktif(navMenu[2]);
+        });
+        navMenu[3].setOnAction(e -> {
+            konten.getChildren().setAll(TransaksiPane.create(user));
+            setAktif(navMenu[3]);
+        });
+        navMenu[4].setOnAction(e -> {
+            konten.getChildren().setAll(PembayaranPane.create());
+            setAktif(navMenu[4]);
+        });
 
         // Tombol Keluar
         Region spasi = new Region();
@@ -85,9 +100,19 @@ public class MainScene {
 
         Button btnKeluar = new Button("🚪  Keluar");
         btnKeluar.setStyle(StyleHelper.btnMerah() + "-fx-min-width:196;-fx-alignment:CENTER_LEFT;");
+
+        // Tambahan: konfirmasi sebelum logout
         btnKeluar.setOnAction(e -> {
-            stage.setScene(LoginScene.create(stage));
-            stage.setTitle("LaundryApp - Login");
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                    "Yakin ingin keluar dari LaundryApp?",
+                    ButtonType.YES, ButtonType.NO);
+            confirm.setTitle("Konfirmasi Logout");
+            confirm.showAndWait().ifPresent(btn -> {
+                if (btn == ButtonType.YES) {
+                    stage.setScene(LoginScene.create(stage));
+                    stage.setTitle("LaundryApp - Login");
+                }
+            });
         });
 
         sidebar.getChildren().addAll(logoBox, garis1, infoUser, garis2);
@@ -109,7 +134,8 @@ public class MainScene {
     }
 
     private static void setAktif(Button btn) {
-        if (tombolAktif != null) tombolAktif.setStyle(StyleHelper.btnSidebar(false));
+        if (tombolAktif != null)
+            tombolAktif.setStyle(StyleHelper.btnSidebar(false));
         tombolAktif = btn;
         btn.setStyle(StyleHelper.btnSidebar(true));
     }
