@@ -74,4 +74,9 @@ public class LayananDAO {
             return false;
         }
     }
+
+    public Object getById(int idLayanan) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+    }
 }
