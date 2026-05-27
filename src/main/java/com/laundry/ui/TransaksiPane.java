@@ -6,8 +6,8 @@ import com.laundry.model.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.control.SelectionMode;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 
@@ -34,9 +34,10 @@ public class TransaksiPane {
         VBox root = new VBox(16);
         root.setPadding(new Insets(10));
 
-        // ================= HEADER =================
-
+        // ===== HEADER =====
         HBox header = new HBox(10);
+        header.setAlignment(Pos.CENTER_LEFT);
+
         Label judul = new Label("Manajemen Transaksi");
         judul.setStyle("-fx-font-size:22px;-fx-font-weight:bold;");
 
@@ -48,63 +49,125 @@ public class TransaksiPane {
 
         header.getChildren().addAll(judul, spacer, btnLaporan);
 
-        // ================= TABEL =================
-
+        // ===== TABEL =====
         tabel = buatTabel();
 
-        // ================= FORM =================
-
+        // ===== FORM =====
         VBox formCard = buatForm(user);
 
-        // ================= STATUS =================
-
+        // ===== PANEL STATUS =====
         HBox panelStatus = buatPanelStatus();
 
         root.getChildren().addAll(header, formCard, panelStatus, tabel);
-
         return root;
     }
 
+    // =====================================================================
+    // FORM BUAT TRANSAKSI
+    // =====================================================================
     private static VBox buatForm(User user) {
 
+        // --- Pelanggan ---
         ComboBox<Pelanggan> cbPelanggan = new ComboBox<>();
         cbPelanggan.getItems().addAll(new PelangganDAO().getAll());
         cbPelanggan.setPromptText("Pilih Pelanggan");
+        cbPelanggan.setMaxWidth(Double.MAX_VALUE);
+        styleCombo(cbPelanggan);
 
+        // --- Tanggal ---
         DatePicker dpMasuk = new DatePicker(LocalDate.now());
         DatePicker dpEstimasi = new DatePicker(LocalDate.now().plusDays(2));
 
-        // ================= TABEL LAYANAN =================
+        // --- ComboBox pilih layanan ---
+        List<Layanan> semuaLayanan = new LayananDAO().getAll();
 
-        TableView<Layanan> tabelLayanan = new TableView<>();
-        tabelLayanan.setPrefHeight(120);
-        tabelLayanan.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        tabelLayanan.getItems().addAll(new LayananDAO().getAll());
+        Label lblPilihLayanan = new Label("Pilih Layanan:");
+        lblPilihLayanan.setStyle("-fx-font-weight:bold;");
 
-        tabelLayanan.getColumns().addAll(
-                kolom("Nama Layanan", "namaLayanan", 180),
-                kolom("Jenis", "jenis", 100),
-                kolom("Harga/unit", "harga", 120));
+        ComboBox<Layanan> cbLayanan = new ComboBox<>();
+        cbLayanan.getItems().addAll(semuaLayanan);
+        cbLayanan.setPromptText("-- Pilih Layanan --");
+        cbLayanan.setMaxWidth(Double.MAX_VALUE);
+        styleCombo(cbLayanan);
 
-        // [FIX] Dua input terpisah: berat (kiloan) dan jumlah (satuan/express)
-        TextField tfBerat = field("Berat (kg) — untuk layanan kiloan");
-        TextField tfJumlah = field("Jumlah (pcs) — untuk layanan satuan/express");
-        TextField tfCatatan = field("Catatan (opsional)");
+        // --- Tombol Tambah layanan ke list ---
+        Button btnTambahLayanan = tombol("+ Tambah", "#2980b9");
 
-        // Petunjuk kecil supaya user tidak bingung
+        HBox barisLayanan = new HBox(10, cbLayanan, btnTambahLayanan);
+        HBox.setHgrow(cbLayanan, Priority.ALWAYS);
+        barisLayanan.setAlignment(Pos.CENTER_LEFT);
+
+        // --- Daftar layanan yang sudah dipilih (ListView) ---
+        ObservableList<Layanan> dipilihList = FXCollections.observableArrayList();
+        ListView<Layanan> lvDipilih = new ListView<>(dipilihList);
+        lvDipilih.setPrefHeight(110);
+        lvDipilih.setStyle("-fx-border-color:#dce1e7; -fx-border-radius:6; -fx-background-radius:6;");
+        lvDipilih.setPlaceholder(new Label("Belum ada layanan dipilih"));
+
+        // Custom cell supaya tampil nama + jenis + harga, dan ada tombol Hapus
+        lvDipilih.setCellFactory(lv -> new ListCell<Layanan>() {
+            private final Button btnHapusItem = new Button("✕");
+            private final Label lblNama = new Label();
+            private final HBox box = new HBox(10, lblNama, new Region(), btnHapusItem);
+            {
+                HBox.setHgrow(box.getChildren().get(1), Priority.ALWAYS);
+                box.setAlignment(Pos.CENTER_LEFT);
+                btnHapusItem.setStyle(
+                        "-fx-background-color:#e74c3c;-fx-text-fill:white;" +
+                                "-fx-font-size:10px;-fx-padding:2 6;-fx-background-radius:4;");
+                btnHapusItem.setOnAction(e -> {
+                    Layanan item = getItem();
+                    if (item != null)
+                        dipilihList.remove(item);
+                });
+            }
+
+            @Override
+            protected void updateItem(Layanan item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    lblNama.setText(item.getNamaLayanan()
+                            + "  [" + item.getJenis() + "]"
+                            + "  — Rp" + (long) item.getHarga() + "/" + item.getJenis());
+                    setGraphic(box);
+                }
+            }
+        });
+
+        // Logika tombol Tambah: cegah duplikat
+        btnTambahLayanan.setOnAction(e -> {
+            Layanan dipilih = cbLayanan.getValue();
+            if (dipilih == null) {
+                alert("Pilih layanan terlebih dahulu!");
+                return;
+            }
+            if (dipilihList.contains(dipilih)) {
+                alert("Layanan \"" + dipilih.getNamaLayanan() + "\" sudah ada dalam daftar.");
+                return;
+            }
+            dipilihList.add(dipilih);
+            cbLayanan.setValue(null);
+        });
+
+        // --- Input Berat & Jumlah ---
         Label lblHint = new Label(
-                "Tip: Isi Berat untuk layanan kiloan, isi Jumlah untuk satuan/express.");
+                "Isi Berat (kg) untuk layanan kiloan  |  Isi Jumlah (pcs) untuk satuan / express");
         lblHint.setStyle("-fx-text-fill:#888; -fx-font-size:11px;");
 
-        // ================= BUTTON =================
+        TextField tfBerat = field("Berat (kg)  — layanan kiloan");
+        TextField tfJumlah = field("Jumlah (pcs)  — layanan satuan / express");
+        TextField tfCatatan = field("Catatan (opsional)");
 
+        // --- Tombol Buat & Hapus ---
         Button btnBuat = tombol("Buat Transaksi", "#27ae60");
         Button btnHapus = tombol("Hapus", "#e74c3c");
 
         btnBuat.setOnAction(e -> {
             try {
                 aksiBuat(user, cbPelanggan, dpMasuk, dpEstimasi,
-                        tabelLayanan, tfBerat, tfJumlah, tfCatatan);
+                        dipilihList, tfBerat, tfJumlah, tfCatatan);
             } catch (Exception ex) {
                 ex.printStackTrace();
                 alert("Terjadi error:\n" + ex.getMessage());
@@ -113,17 +176,25 @@ public class TransaksiPane {
 
         btnHapus.setOnAction(e -> aksiHapus());
 
+        // --- Susunan baris ---
         HBox barisTanggal = new HBox(10,
                 new Label("Masuk:"), dpMasuk,
                 new Label("Estimasi:"), dpEstimasi);
+        barisTanggal.setAlignment(Pos.CENTER_LEFT);
 
         HBox barisTombol = new HBox(10, btnBuat, btnHapus);
 
+        Label lblDipilih = new Label("Layanan yang dipilih:");
+        lblDipilih.setStyle("-fx-font-weight:bold;");
+
         VBox form = new VBox(10,
+                new Label("Pelanggan:"),
                 cbPelanggan,
                 barisTanggal,
-                new Label("Pilih layanan (CTRL+Klik untuk multi):"),
-                tabelLayanan,
+                lblPilihLayanan,
+                barisLayanan,
+                lblDipilih,
+                lvDipilih,
                 lblHint,
                 tfBerat,
                 tfJumlah,
@@ -138,6 +209,9 @@ public class TransaksiPane {
         return form;
     }
 
+    // =====================================================================
+    // PANEL UPDATE STATUS
+    // =====================================================================
     private static HBox buatPanelStatus() {
 
         ComboBox<String> cbStatus = new ComboBox<>();
@@ -148,7 +222,6 @@ public class TransaksiPane {
 
         btnUpdate.setOnAction(e -> {
             Transaksi pilihan = tabel.getSelectionModel().getSelectedItem();
-
             if (pilihan == null) {
                 alert("Pilih transaksi!");
                 return;
@@ -158,9 +231,7 @@ public class TransaksiPane {
                 return;
             }
 
-            boolean berhasil = dao.updateStatus(
-                    pilihan.getIdTransaksi(), cbStatus.getValue());
-
+            boolean berhasil = dao.updateStatus(pilihan.getIdTransaksi(), cbStatus.getValue());
             if (berhasil)
                 refreshData();
             else
@@ -173,8 +244,8 @@ public class TransaksiPane {
                         cbStatus.setValue(baru.getStatus());
                 });
 
-        HBox panel = new HBox(10,
-                new Label("Update Status:"), cbStatus, btnUpdate);
+        HBox panel = new HBox(10, new Label("Update Status:"), cbStatus, btnUpdate);
+        panel.setAlignment(Pos.CENTER_LEFT);
         panel.setStyle(
                 "-fx-background-color:white;" +
                         "-fx-padding:12;" +
@@ -183,39 +254,34 @@ public class TransaksiPane {
         return panel;
     }
 
-    // ================= AKSI BUAT TRANSAKSI =================
-
+    // =====================================================================
+    // AKSI BUAT TRANSAKSI
+    // =====================================================================
     private static void aksiBuat(
             User user,
             ComboBox<Pelanggan> cbPelanggan,
             DatePicker dpMasuk,
             DatePicker dpEstimasi,
-            TableView<Layanan> tabelLayanan,
-            TextField tfBerat, // [FIX] input berat untuk kiloan
-            TextField tfJumlah, // [FIX] input jumlah untuk satuan/express
+            ObservableList<Layanan> dipilihList,
+            TextField tfBerat,
+            TextField tfJumlah,
             TextField tfCatatan) {
 
-        // ================= VALIDASI =================
-
+        // --- Validasi wajib ---
         if (cbPelanggan.getValue() == null) {
             alert("Pilih pelanggan!");
             return;
         }
-
-        List<Layanan> dipilih = new ArrayList<>(
-                tabelLayanan.getSelectionModel().getSelectedItems());
-
-        if (dipilih.isEmpty()) {
-            alert("Pilih minimal 1 layanan!");
+        if (dipilihList.isEmpty()) {
+            alert("Tambahkan minimal 1 layanan!");
             return;
         }
-
         if (dpEstimasi.getValue().isBefore(dpMasuk.getValue())) {
             alert("Estimasi tidak boleh sebelum tanggal masuk!");
             return;
         }
 
-        // [FIX] Parse dua input terpisah
+        // --- Parse berat & jumlah ---
         double berat = 0;
         int jumlah = 0;
 
@@ -230,7 +296,6 @@ public class TransaksiPane {
                 return;
             }
         }
-
         if (!txtJumlah.isEmpty()) {
             try {
                 jumlah = Integer.parseInt(txtJumlah);
@@ -240,9 +305,8 @@ public class TransaksiPane {
             }
         }
 
-        // [FIX] Validasi: pastikan input yang relevan sudah diisi
-        // berdasarkan jenis layanan yang dipilih
-        for (Layanan l : dipilih) {
+        // --- Validasi tiap layanan ---
+        for (Layanan l : dipilihList) {
             if ("kiloan".equals(l.getJenis()) && berat <= 0) {
                 alert("Layanan \"" + l.getNamaLayanan() +
                         "\" adalah kiloan.\nIsi kolom Berat (kg) terlebih dahulu!");
@@ -256,8 +320,7 @@ public class TransaksiPane {
             }
         }
 
-        // ================= INSERT TRANSAKSI =================
-
+        // --- Insert transaksi ---
         Transaksi t = new Transaksi();
         t.setIdPelanggan(cbPelanggan.getValue().getIdPelanggan());
         t.setIdUser(user.getIdUser());
@@ -266,7 +329,6 @@ public class TransaksiPane {
         t.setCatatan(tfCatatan.getText());
 
         int idBaru = dao.insertGetId(t);
-
         System.out.println("ID TRANSAKSI BARU = " + idBaru);
 
         if (idBaru <= 0) {
@@ -275,52 +337,47 @@ public class TransaksiPane {
             return;
         }
 
-        // ================= INSERT DETAIL TRANSAKSI =================
-        // [FIX] Setiap layanan dibuatkan DetailTransaksi sendiri,
-        // dengan beratKg atau jumlah sesuai jenisnya
-
-        for (Layanan l : dipilih) {
+        // --- Insert detail per layanan ---
+        for (Layanan l : dipilihList) {
             try {
                 DetailTransaksi d = new DetailTransaksi();
                 d.setIdTransaksi(idBaru);
                 d.setIdLayanan(l.getIdLayanan());
 
                 if ("kiloan".equals(l.getJenis())) {
-                    // Kiloan: isi beratKg, jumlah = 0
                     d.setBeratKg(berat);
                     d.setJumlah(0);
                 } else {
-                    // Satuan / Express: isi jumlah, beratKg = 0
                     d.setBeratKg(0);
                     d.setJumlah(jumlah);
                 }
 
                 boolean ok = dtDao.insert(d);
-                if (!ok) {
-                    System.err.println("Gagal insert detail untuk layanan: " + l.getNamaLayanan());
-                }
+                if (!ok)
+                    System.err.println("Gagal insert detail: " + l.getNamaLayanan());
 
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
 
-        // ================= RESET FORM & REFRESH =================
-
+        // --- Reset form ---
         refreshData();
         cbPelanggan.setValue(null);
+        dipilihList.clear();
         tfBerat.clear();
         tfJumlah.clear();
         tfCatatan.clear();
-        tabelLayanan.getSelectionModel().clearSelection();
 
         alert("Transaksi berhasil dibuat!");
     }
 
+    // =====================================================================
+    // AKSI HAPUS TRANSAKSI
+    // =====================================================================
     private static void aksiHapus() {
 
         Transaksi pilihan = tabel.getSelectionModel().getSelectedItem();
-
         if (pilihan == null) {
             alert("Pilih transaksi!");
             return;
@@ -341,6 +398,9 @@ public class TransaksiPane {
         });
     }
 
+    // =====================================================================
+    // TABEL TRANSAKSI
+    // =====================================================================
     private static TableView<Transaksi> buatTabel() {
 
         TableView<Transaksi> t = new TableView<>(data);
@@ -357,6 +417,9 @@ public class TransaksiPane {
         return t;
     }
 
+    // =====================================================================
+    // HELPER
+    // =====================================================================
     private static void refreshData() {
         data.setAll(dao.getAll());
     }
@@ -393,6 +456,14 @@ public class TransaksiPane {
                         "-fx-padding:7 14;" +
                         "-fx-background-radius:6;");
         return b;
+    }
+
+    private static void styleCombo(ComboBox<?> cb) {
+        cb.setStyle(
+                "-fx-border-color:#dce1e7;" +
+                        "-fx-border-radius:6;" +
+                        "-fx-background-radius:6;" +
+                        "-fx-padding:4;");
     }
 
     @SuppressWarnings("unchecked")

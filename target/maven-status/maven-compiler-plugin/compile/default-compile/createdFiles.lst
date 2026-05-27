@@ -4,6 +4,7 @@ com\laundry\model\Pelanggan.class
 com\laundry\ui\LoginScene.class
 com\laundry\model\Layanan.class
 com\laundry\dao\LayananDAO.class
+com\laundry\ui\TransaksiPane$1.class
 com\laundry\ui\MainScene.class
 com\laundry\dao\UserDAO.class
 com\laundry\db\DBConnection.class
